@@ -48,14 +48,27 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Set Release Metadata
+        if: success() && github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        id: release_meta
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "tag_name=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+            echo "release_name=Top Security لويندوز ${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=v1.0.${GITHUB_RUN_NUMBER}" >> $GITHUB_OUTPUT
+            echo "release_name=Top Security لويندوز (تحديث #${GITHUB_RUN_NUMBER})" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create or Update GitHub Release
         if: success() && github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: softprops/action-gh-release@v2
         with:
           files: dist-electron/*.exe
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v1.0.{0}', github.run_number) }}
+          tag_name: ${{ steps.release_meta.outputs.tag_name }}
           target_commitish: ${{ github.sha }}
-          name: ${{ startsWith(github.ref, 'refs/tags/') && format('Top Security لويندوز {0}', github.ref_name) || format('Top Security لويندوز (تحديث #{0})', github.run_number) }}
+          name: ${{ steps.release_meta.outputs.release_name }}
           body: |
             ## تحميل برنامج Top Security لإدارة المبيعات والفواتير والمخازن 🛡️
             
