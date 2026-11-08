@@ -28,7 +28,7 @@ export interface UpdateCheckResult {
   error?: string;
 }
 
-export const APP_CURRENT_VERSION = '1.0.0';
+export const APP_CURRENT_VERSION = '1.0.1';
 export const GITHUB_REPO = 'Fer3onMod/PC-app';
 
 /**
@@ -222,3 +222,133 @@ export function openDownloadUrl(url: string, filename?: string) {
     document.body.removeChild(a);
   }
 }
+
+/**
+ * Real-Time Update Synchronization State & Engine
+ */
+export interface UpdateSyncState {
+  isSyncing: boolean;
+  lastSyncTime: Date | null;
+  hasUpdate: boolean;
+  currentVersion: string;
+  latestRelease: ReleaseInfo | null;
+  error?: string;
+  status: 'idle' | 'checking' | 'synced' | 'update_available' | 'offline';
+}
+
+type SyncListener = (state: UpdateSyncState) => void;
+
+class UpdateSyncEngine {
+  private state: UpdateSyncState = {
+    isSyncing: false,
+    lastSyncTime: null,
+    hasUpdate: false,
+    currentVersion: APP_CURRENT_VERSION,
+    latestRelease: null,
+    status: 'idle',
+  };
+
+  private listeners = new Set<SyncListener>();
+  private intervalTimer: any = null;
+  private lastAttemptTimestamp = 0;
+  private initialized = false;
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.initListeners();
+    }
+  }
+
+  public getState(): UpdateSyncState {
+    return { ...this.state };
+  }
+
+  public subscribe(listener: SyncListener): () => void {
+    this.listeners.add(listener);
+    listener(this.getState());
+
+    if (!this.initialized) {
+      this.initialized = true;
+      // Initial background sync check
+      this.syncNow(false);
+      // Auto periodic sync every 5 minutes (300,000 ms)
+      this.intervalTimer = setInterval(() => {
+        this.syncNow(false);
+      }, 5 * 60 * 1000);
+    }
+
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notify() {
+    const snapshot = this.getState();
+    this.listeners.forEach((fn) => {
+      try {
+        fn(snapshot);
+      } catch (err) {
+        console.error('Update listener error:', err);
+      }
+    });
+  }
+
+  private initListeners() {
+    // Window focus / tab active check with 30-second throttle
+    const handleActive = () => {
+      if (document.visibilityState === 'visible' || document.hasFocus()) {
+        const now = Date.now();
+        if (now - this.lastAttemptTimestamp > 30 * 1000) {
+          this.syncNow(false);
+        }
+      }
+    };
+
+    window.addEventListener('focus', handleActive);
+    document.addEventListener('visibilitychange', handleActive);
+  }
+
+  public async syncNow(force = true): Promise<UpdateSyncState> {
+    const now = Date.now();
+    if (!force && this.state.isSyncing) {
+      return this.getState();
+    }
+
+    this.lastAttemptTimestamp = now;
+    this.state.isSyncing = true;
+    this.state.status = 'checking';
+    this.notify();
+
+    try {
+      const res = await checkForGitHubUpdate(APP_CURRENT_VERSION);
+      this.state.isSyncing = false;
+      this.state.lastSyncTime = new Date();
+
+      if (res.hasUpdate && res.latestRelease) {
+        this.state.hasUpdate = true;
+        this.state.latestRelease = res.latestRelease;
+        this.state.error = undefined;
+        this.state.status = 'update_available';
+      } else if (res.error) {
+        this.state.error = res.error;
+        this.state.status = 'offline';
+      } else {
+        this.state.hasUpdate = false;
+        this.state.latestRelease = null;
+        this.state.error = undefined;
+        this.state.status = 'synced';
+      }
+    } catch (e: any) {
+      this.state.isSyncing = false;
+      this.state.lastSyncTime = new Date();
+      this.state.error = 'تعذر الاتصال بخادم التحديثات حالياً';
+      this.state.status = 'offline';
+    }
+
+    this.notify();
+    return this.getState();
+  }
+}
+
+export const updateSyncEngine = new UpdateSyncEngine();
+

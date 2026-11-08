@@ -11,6 +11,7 @@ function createWindow() {
     minWidth: 1024,
     minHeight: 680,
     title: 'Top Security - أنظمة المراقبة وإدارة المبيعات والحسابات',
+    icon: path.join(__dirname, '../public/icon.png'),
     backgroundColor: '#0f172a',
     frame: true,
     autoHideMenuBar: true,

@@ -28,9 +28,9 @@ call npx electron-builder --win --x64 --publish never
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ========================================================
-    echo  [✓] تم بناء الملفات بنجاح في مجلد: dist-electron
-    echo  1. ملف التثبيت: TopSecurity-Setup.exe
-    echo  2. النسخة المحمولة: TopSecurity-Portable.exe
+    echo  [✓] تم بناء الملفات بنجاح بالأيقونة ورقم الإصدار في: dist-electron
+    echo  1. ملف التثبيت: TopSecurity-Setup-1.0.1.exe
+    echo  2. النسخة المحمولة: TopSecurity-Portable-1.0.1.exe
     echo ========================================================
     if exist dist-electron explorer dist-electron
 ) else (

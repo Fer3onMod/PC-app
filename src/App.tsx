@@ -21,7 +21,12 @@ import { CashierExpensesView } from './components/CashierExpensesView';
 import { ReportsView } from './components/ReportsView';
 import { SettingsView } from './components/SettingsView';
 import { UpdateNotificationModal } from './components/UpdateNotificationModal';
-import { checkForGitHubUpdate, ReleaseInfo, APP_CURRENT_VERSION, GITHUB_REPO } from './utils/updater';
+import {
+  ReleaseInfo,
+  APP_CURRENT_VERSION,
+  updateSyncEngine,
+  UpdateSyncState
+} from './utils/updater';
 
 import {
   ShoppingCart,
@@ -38,7 +43,8 @@ import {
   Keyboard,
   ShieldCheck,
   CheckCircle2,
-  Wifi
+  Wifi,
+  RefreshCw
 } from 'lucide-react';
 
 type ActiveTab =
@@ -79,22 +85,22 @@ export default function App() {
     setActiveInvoice(storage.getActiveInvoice());
   };
 
-  const [availableUpdate, setAvailableUpdate] = useState<ReleaseInfo | null>(null);
+  const [syncState, setSyncState] = useState<UpdateSyncState>(updateSyncEngine.getState());
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   useEffect(() => {
     reloadData();
 
-    // Check for updates on startup
-    let isMounted = true;
-    checkForGitHubUpdate(APP_CURRENT_VERSION).then((res) => {
-      if (isMounted && res.hasUpdate && res.latestRelease) {
-        setAvailableUpdate(res.latestRelease);
+    // Subscribe to real-time background update synchronization
+    const unsubscribe = updateSyncEngine.subscribe((state) => {
+      setSyncState(state);
+      if (state.hasUpdate && state.latestRelease) {
         setShowUpdateModal(true);
       }
     });
+
     return () => {
-      isMounted = false;
+      unsubscribe();
     };
   }, []);
 
@@ -345,7 +351,9 @@ export default function App() {
         storeName={settings.storeName}
         onOpenHelp={() => setShowShortcutsModal(true)}
         onNewInvoice={handleStartNewInvoice}
-        hasUpdate={!!availableUpdate}
+        hasUpdate={syncState.hasUpdate}
+        isSyncing={syncState.isSyncing}
+        onManualSync={() => updateSyncEngine.syncNow(true)}
         onOpenUpdateModal={() => setShowUpdateModal(true)}
       />
 
@@ -768,6 +776,25 @@ export default function App() {
                 <span className="text-slate-200 font-semibold">{settings.currency}</span>
               </span>
               <span className="text-slate-700">|</span>
+              <button
+                type="button"
+                onClick={() => updateSyncEngine.syncNow(true)}
+                disabled={syncState.isSyncing}
+                className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/70 text-slate-300 rounded-md text-[10px] font-sans font-medium transition-all cursor-pointer shadow-2xs"
+                title="مزامنة التحديثات السحابية الآن"
+              >
+                <RefreshCw className={`w-3 h-3 ${syncState.isSyncing ? 'animate-spin text-sky-400' : 'text-slate-400'}`} />
+                <span>
+                  {syncState.isSyncing
+                    ? 'جاري المزامنة...'
+                    : syncState.hasUpdate
+                    ? 'تحديث جديد متوفر!'
+                    : syncState.lastSyncTime
+                    ? `مزامنة: ${syncState.lastSyncTime.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`
+                    : 'المزامنة السحابية نشطة'}
+                </span>
+              </button>
+              <span className="text-slate-700">|</span>
               <span className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-950/70 border border-emerald-500/30 text-emerald-400 rounded-md text-[10px] font-sans font-bold shadow-2xs">
                 <CheckCircle2 className="w-3 h-3 text-emerald-400 inline" />
                 <span>النظام جاهز ومتصل</span>
@@ -824,21 +851,21 @@ export default function App() {
         </div>
       )}
 
-      {/* GitHub Update Notification Modal */}
-      {availableUpdate && showUpdateModal && (
+      {/* System Update Notification Modal */}
+      {syncState.hasUpdate && syncState.latestRelease && showUpdateModal && (
         <UpdateNotificationModal
-          release={availableUpdate}
+          release={syncState.latestRelease}
           onClose={() => setShowUpdateModal(false)}
         />
       )}
 
       {/* Floating Update Available Pill Button when modal dismissed */}
-      {availableUpdate && !showUpdateModal && (
+      {syncState.hasUpdate && syncState.latestRelease && !showUpdateModal && (
         <button
           onClick={() => setShowUpdateModal(true)}
           className="no-print fixed bottom-4 left-4 z-40 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-xl flex items-center gap-2 cursor-pointer animate-bounce border border-blue-400/40"
         >
-          <span>🚀 تحديث جديد متاح ({availableUpdate.tagName})</span>
+          <span>🚀 تحديث جديد متاح ({syncState.latestRelease.tagName})</span>
           <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">تثبيت الآن</span>
         </button>
       )}

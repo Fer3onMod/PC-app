@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StoreSettings } from '../types';
 import { storage } from '../utils/storage';
 import {
@@ -13,13 +13,14 @@ import {
   Check,
   Rocket,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Radio
 } from 'lucide-react';
 import {
-  checkForGitHubUpdate,
   openDownloadUrl,
   APP_CURRENT_VERSION,
-  GITHUB_REPO,
+  updateSyncEngine,
+  UpdateSyncState,
   ReleaseInfo
 } from '../utils/updater';
 
@@ -38,39 +39,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ text: string; success: boolean } | null>(null);
   const [showPurgeModal, setShowPurgeModal] = useState(false);
-  const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const [updateInfo, setUpdateInfo] = useState<{
-    checked: boolean;
-    hasUpdate: boolean;
-    release?: ReleaseInfo;
-    message?: string;
-  }>({ checked: false, hasUpdate: false });
+  const [syncState, setSyncState] = useState<UpdateSyncState>(updateSyncEngine.getState());
 
-  const handleCheckUpdate = async () => {
-    setCheckingUpdate(true);
-    setUpdateInfo({ checked: false, hasUpdate: false });
-    const res = await checkForGitHubUpdate(APP_CURRENT_VERSION);
-    setCheckingUpdate(false);
-    if (res.hasUpdate && res.latestRelease) {
-      setUpdateInfo({
-        checked: true,
-        hasUpdate: true,
-        release: res.latestRelease,
-        message: `يتوفر تحديث جديد: ${res.latestRelease.tagName || res.latestRelease.version}`,
-      });
-    } else if (res.error) {
-      setUpdateInfo({
-        checked: true,
-        hasUpdate: false,
-        message: res.error,
-      });
-    } else {
-      setUpdateInfo({
-        checked: true,
-        hasUpdate: false,
-        message: `أنت تستخدم أحدث إصدار من البرنامج بالفعل (v${APP_CURRENT_VERSION})!`,
-      });
-    }
+  useEffect(() => {
+    const unsub = updateSyncEngine.subscribe((state) => {
+      setSyncState(state);
+    });
+    return () => unsub();
+  }, []);
+
+  const handleTriggerSync = () => {
+    updateSyncEngine.syncNow(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -346,7 +325,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
 
-        {/* تحديثات النظام - مظهر بسيط ونظيف مع تحميل مباشر داخل التطبيق */}
+        {/* تحديثات ومزامنة النظام - مظهر أنيق وبسيط مع مزامنة فعلية وتحميل مباشر داخل التطبيق */}
         <div className="mt-5 pt-4 border-t border-slate-200">
           <div className="bg-slate-900 text-white p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-3">
@@ -354,69 +333,93 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <Rocket className="w-5 h-5 stroke-[2.2]" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-bold text-white">تحديثات النظام</h4>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-sm font-bold text-white">تحديثات ومزامنة النظام</h4>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-bold">
                     الإصدار المثبت: v{APP_CURRENT_VERSION}
                   </span>
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-[10px] text-emerald-300 font-semibold">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                    <span>
+                      {syncState.isSyncing
+                        ? 'جاري المزامنة...'
+                        : syncState.lastSyncTime
+                        ? `آخر مزامنة: ${syncState.lastSyncTime.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`
+                        : 'المزامنة السحابية نشطة'}
+                    </span>
+                  </div>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  فحص الإصدارات الجديدة وتحميلها مباشرة بنقرة واحدة داخل البرنامج.
+                  فحص ومزامنة دورية تلقائية للإصدارات الجديدة مع إمكانية التنزيل المباشر داخل التطبيق.
                 </p>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={handleCheckUpdate}
-              disabled={checkingUpdate}
+              onClick={handleTriggerSync}
+              disabled={syncState.isSyncing}
               className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer shrink-0"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${checkingUpdate ? 'animate-spin' : ''}`} />
-              <span>{checkingUpdate ? 'جاري التحقق من التحديثات...' : 'التحقق من التحديثات'}</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${syncState.isSyncing ? 'animate-spin' : ''}`} />
+              <span>{syncState.isSyncing ? 'جاري مزامنة التحديثات...' : 'مزامنة التحديثات الآن'}</span>
             </button>
           </div>
 
-          {updateInfo.checked && (
+          {/* Sync Status Banner */}
+          {syncState.status !== 'idle' && (
             <div
               className={`mt-2.5 p-3.5 rounded-xl text-xs font-bold border transition-all ${
-                updateInfo.hasUpdate
+                syncState.hasUpdate
                   ? 'bg-blue-50 text-blue-900 border-blue-300'
-                  : 'bg-slate-50 text-slate-700 border-slate-200'
+                  : syncState.error
+                  ? 'bg-amber-50 text-amber-900 border-amber-200'
+                  : 'bg-emerald-50 text-emerald-900 border-emerald-200'
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  {updateInfo.hasUpdate ? (
+                  {syncState.hasUpdate ? (
                     <Rocket className="w-4 h-4 text-blue-600 animate-bounce shrink-0" />
+                  ) : syncState.error ? (
+                    <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
                   ) : (
                     <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                   )}
-                  <span>{updateInfo.message}</span>
+                  <span>
+                    {syncState.hasUpdate && syncState.latestRelease
+                      ? `يتوفر تحديث جديد: ${syncState.latestRelease.tagName || syncState.latestRelease.version} جاهز للتنزيل المباشر!`
+                      : syncState.error
+                      ? syncState.error
+                      : `أنت تستخدم أحدث إصدار من البرنامج (v${APP_CURRENT_VERSION}) والبيانات متزامنة تماماً.`}
+                  </span>
                 </div>
 
-                {updateInfo.hasUpdate && updateInfo.release && (
+                {syncState.hasUpdate && syncState.latestRelease && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <button
                       type="button"
                       onClick={() =>
                         openDownloadUrl(
-                          updateInfo.release!.setupUrl || updateInfo.release!.htmlUrl,
-                          `TopSecurity-Setup-${updateInfo.release!.version}.exe`
+                          syncState.latestRelease!.setupUrl || syncState.latestRelease!.htmlUrl,
+                          `TopSecurity-Setup-${syncState.latestRelease!.version}.exe`
                         )
                       }
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs"
                     >
                       <Download className="w-3.5 h-3.5" />
-                      <span>تحميل النسخة الرسمية (Setup.exe)</span>
+                      <span>تحميل برنامج التثبيت (Setup.exe)</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() =>
                         openDownloadUrl(
-                          updateInfo.release!.portableUrl || updateInfo.release!.htmlUrl,
-                          `TopSecurity-Portable-${updateInfo.release!.version}.exe`
+                          syncState.latestRelease!.portableUrl || syncState.latestRelease!.htmlUrl,
+                          `TopSecurity-Portable-${syncState.latestRelease!.version}.exe`
                         )
                       }
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Minus, Square, X, Clock, HelpCircle, Plus } from 'lucide-react';
+import { Minus, Square, X, Clock, HelpCircle, Plus, RefreshCw } from 'lucide-react';
 import { Logo } from './Logo';
 
 interface WindowsTitleBarProps {
@@ -8,6 +8,8 @@ interface WindowsTitleBarProps {
   onNewInvoice?: () => void;
   hasUpdate?: boolean;
   onOpenUpdateModal?: () => void;
+  isSyncing?: boolean;
+  onManualSync?: () => void;
 }
 
 export const WindowsTitleBar: React.FC<WindowsTitleBarProps> = ({
@@ -16,6 +18,8 @@ export const WindowsTitleBar: React.FC<WindowsTitleBarProps> = ({
   onNewInvoice,
   hasUpdate,
   onOpenUpdateModal,
+  isSyncing = false,
+  onManualSync,
 }) => {
   const [timeStr, setTimeStr] = useState('');
   const [isMaximized, setIsMaximized] = useState(false);
@@ -92,6 +96,18 @@ export const WindowsTitleBar: React.FC<WindowsTitleBarProps> = ({
             title="يتوفر تحديث جديد للبرنامج متوفر للتحميل الآن"
           >
             <span>🚀 تحديث جديد</span>
+          </button>
+        )}
+
+        {onManualSync && (
+          <button
+            onClick={onManualSync}
+            className={`w-7 h-6 flex items-center justify-center rounded transition-colors ${
+              isSyncing ? 'text-sky-400 bg-slate-800' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+            title={isSyncing ? 'جاري مزامنة التحديثات...' : 'مزامنة التحديثات السحابية الآن'}
+          >
+            <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin text-sky-400' : ''}`} />
           </button>
         )}
 
