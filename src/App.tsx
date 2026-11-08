@@ -17,7 +17,6 @@ import { CustomersView } from './components/CustomersView';
 import { CashierExpensesView } from './components/CashierExpensesView';
 import { ReportsView } from './components/ReportsView';
 import { SettingsView } from './components/SettingsView';
-import { WindowsBuildCenter } from './components/WindowsBuildCenter';
 
 import {
   ShoppingCart,
@@ -45,8 +44,7 @@ type ActiveTab =
   | 'customers'
   | 'cashier_expenses'
   | 'reports'
-  | 'settings'
-  | 'windows_build';
+  | 'settings';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('pos');
@@ -385,11 +383,7 @@ export default function App() {
                 );
               })}
 
-              <div className="text-[10px] font-bold text-slate-500 px-2 pt-3 pb-1">
-                النظام وويندوز
-              </div>
               {[
-                { id: 'windows_build', label: 'تجهيز وبناء ويندوز EXE', icon: Monitor, highlight: true },
                 { id: 'settings', label: 'إعدادات المتجر والفاتورة', icon: Settings },
               ].map((item) => {
                 const Icon = item.icon;
@@ -401,8 +395,6 @@ export default function App() {
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg font-bold transition-all cursor-pointer ${
                       isActive
                         ? 'bg-blue-600 text-white shadow-xs'
-                        : item.highlight
-                        ? 'text-emerald-400 hover:bg-emerald-950/30'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                     }`}
                   >
@@ -537,8 +529,6 @@ export default function App() {
                 settings={settings}
               />
             )}
-
-            {activeTab === 'windows_build' && <WindowsBuildCenter />}
 
             {activeTab === 'settings' && (
               <SettingsView

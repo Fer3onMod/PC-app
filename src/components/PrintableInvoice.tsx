@@ -618,7 +618,7 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({
             <div className="text-center text-[9px] pt-1 space-y-1">
               <p className="font-semibold">{invoice.amountInWords}</p>
               <p className="text-slate-600">شكراً لزيارتكم ونتمنى لكم يوماً سعيداً</p>
-              <p className="font-mono text-[8px] text-slate-400">نظام التاجر لإدارة المحلات</p>
+              <p className="font-mono text-[8px] text-slate-400">نظام Top Security لإدارة المحلات والمبيعات</p>
             </div>
           </div>
         )}

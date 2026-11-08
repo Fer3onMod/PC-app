@@ -1,7 +1,7 @@
 import { Product, Customer, Invoice, Expense, CashShift, StoreSettings } from '../types';
 
 export const DEFAULT_SETTINGS: StoreSettings = {
-  storeName: 'مؤسسة الأفق للأنظمة الأمنية والإلكترونيات',
+  storeName: 'Top Security',
   commercialActivity: 'توريد وتركيب كاميرات مراقبة وشبكات وأجهزة أمنية',
   phone1: '01026642088',
   phone2: '01223456789',
@@ -425,7 +425,12 @@ export const storage = {
       return DEFAULT_SETTINGS;
     }
     try {
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+      const parsed = JSON.parse(raw);
+      if (parsed.storeName === 'مؤسسة الأفق للأنظمة الأمنية والإلكترونيات' || !parsed.storeName) {
+        parsed.storeName = 'Top Security';
+        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(parsed));
+      }
+      return { ...DEFAULT_SETTINGS, ...parsed };
     } catch {
       return DEFAULT_SETTINGS;
     }

@@ -9,7 +9,7 @@ function createWindow() {
     height: 800,
     minWidth: 1024,
     minHeight: 680,
-    title: 'نظام التاجر - برنامج إدارة حسابات ومبيعات المحلات التجارية',
+    title: 'Top Security - أنظمة المراقبة وإدارة المبيعات والحسابات',
     backgroundColor: '#0f172a',
     frame: true,
     autoHideMenuBar: true,

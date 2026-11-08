@@ -52,7 +52,7 @@ export const WindowsTitleBar: React.FC<WindowsTitleBarProps> = ({ storeName, onO
     if ((window as any).electronAPI?.close) {
       (window as any).electronAPI.close();
     } else {
-      if (window.confirm('هل تريد إغلاق تطبيق نظام التاجر؟')) {
+      if (window.confirm('هل تريد إغلاق تطبيق Top Security؟')) {
         window.close();
       }
     }
@@ -62,15 +62,12 @@ export const WindowsTitleBar: React.FC<WindowsTitleBarProps> = ({ storeName, onO
     <div className="no-print bg-slate-950 text-slate-300 border-b border-slate-800/80 px-3 py-1 flex items-center justify-between text-xs select-none h-9 shrink-0">
       {/* Right side (RTL): App brand & store title */}
       <div className="flex items-center gap-2">
-        <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-[10px] shadow-xs">
-          ت
+        <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center text-white font-black text-[10px] shadow-xs tracking-tighter">
+          TS
         </div>
-        <span className="font-bold text-slate-100 tracking-tight">نظام التاجر للمحاسبة</span>
+        <span className="font-extrabold text-white tracking-tight font-sans">Top Security</span>
         <span className="text-slate-500">|</span>
         <span className="text-slate-400 truncate max-w-[220px] font-medium">{storeName}</span>
-        <span className="hidden md:inline-block text-[10px] font-mono px-1.5 py-0.2 bg-slate-800 text-blue-300 rounded border border-slate-700">
-          Windows Desktop Edition
-        </span>
       </div>
 
       {/* Center: System Status and Clock */}
