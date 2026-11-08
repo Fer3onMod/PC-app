@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Invoice, StoreSettings } from '../types';
 import { Printer, ArrowRight, Download, FileText, CheckCircle2, Copy } from 'lucide-react';
+import { Logo } from './Logo';
 
 interface PrintableInvoiceProps {
   invoice: Invoice;
@@ -409,23 +410,21 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({
             className="w-full max-w-[840px] bg-white border border-slate-300 p-8 text-black text-xs shadow-sm font-sans"
             style={{ minHeight: '1050px', boxSizing: 'border-box' }}
           >
-            {/* Store Full Header */}
-            <div className="flex items-start justify-between border-b-2 border-blue-900 pb-4 mb-4">
+            {/* Store Full Header with Professional Logo */}
+            <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4 mb-4">
               <div>
-                <h2 className="text-xl font-black text-blue-950 tracking-tight">
-                  {settings.storeName}
-                </h2>
-                <p className="text-xs text-slate-600 mt-1">{settings.commercialActivity}</p>
-                <div className="flex items-center gap-4 text-[11px] text-slate-500 mt-2 font-mono">
+                <Logo size="lg" monochrome={true} showSubtitle={true} className="mb-2" />
+                <p className="text-xs text-slate-700 mt-1 font-medium">{settings.commercialActivity}</p>
+                <div className="flex items-center gap-4 text-[11px] text-slate-600 mt-2 font-mono">
                   <span>س.ت: {settings.commercialReg}</span>
                   <span>·</span>
                   <span>ب.ض: {settings.taxNumber}</span>
                 </div>
               </div>
-              <div className="text-left text-xs text-slate-600 leading-snug">
-                <p className="font-bold text-slate-900">{settings.city} - {settings.address}</p>
-                <p className="font-mono mt-1">هاتف: {settings.phone1}</p>
-                {settings.phone2 && <p className="font-mono">مبيعات: {settings.phone2}</p>}
+              <div className="text-left text-xs text-slate-700 leading-snug">
+                <p className="font-bold text-slate-900 text-sm">{settings.city} - {settings.address}</p>
+                <p className="font-mono mt-1 text-slate-800">هاتف: {settings.phone1}</p>
+                {settings.phone2 && <p className="font-mono text-slate-800">مبيعات: {settings.phone2}</p>}
               </div>
             </div>
 

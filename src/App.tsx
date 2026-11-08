@@ -9,6 +9,7 @@ import {
 } from './types';
 import { storage } from './utils/storage';
 import { WindowsTitleBar } from './components/WindowsTitleBar';
+import { Logo } from './components/Logo';
 import { POSView } from './components/POSView';
 import { PrintableInvoice } from './components/PrintableInvoice';
 import { InvoicesListView } from './components/InvoicesListView';
@@ -27,8 +28,7 @@ import {
   Wallet,
   FileBarChart,
   Settings,
-  AlertTriangle,
-  Monitor,
+  Plus,
   HelpCircle,
   X,
   Keyboard,
@@ -49,6 +49,8 @@ type ActiveTab =
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('pos');
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [resetTrigger, setResetTrigger] = useState<number>(0);
+  const [invoiceToEdit, setInvoiceToEdit] = useState<Invoice | null>(null);
 
   // Application Data States
   const [products, setProducts] = useState<Product[]>([]);
@@ -73,6 +75,13 @@ export default function App() {
     reloadData();
   }, []);
 
+  // Trigger brand new invoice flow
+  const handleStartNewInvoice = () => {
+    setInvoiceToEdit(null);
+    setResetTrigger((prev) => prev + 1);
+    setActiveTab('pos');
+  };
+
   // Global Keyboard Shortcuts for Windows desktop feel
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
@@ -81,7 +90,7 @@ export default function App() {
         setShowShortcutsModal(true);
       } else if (e.key === 'F2') {
         e.preventDefault();
-        setActiveTab('pos');
+        handleStartNewInvoice();
       } else if (e.key === 'F10') {
         e.preventDefault();
         setActiveTab('cashier_expenses');
@@ -181,8 +190,6 @@ export default function App() {
       setTimeout(() => {
         window.print();
       }, 400);
-    } else {
-      alert(`تم حفظ الفاتورة رقم #${invoice.invoiceNumber} بنجاح!`);
     }
   };
 
@@ -204,8 +211,6 @@ export default function App() {
       totalCustomerCollections: shift.totalCustomerCollections + amount,
       expectedCash: shift.expectedCash + amount,
     });
-
-    alert(`تم تسجيل سند القبض بمبلغ ${amount.toLocaleString()} ${settings.currency} بنجاح!`);
   };
 
   const handleReturnInvoice = (originalInvoice: Invoice) => {
@@ -259,35 +264,31 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans select-none" dir="rtl">
-      {/* 1. Windows 11 Desktop Title Bar */}
+      {/* 1. Windows 11 Desktop Title Bar with Top Security Logo */}
       <WindowsTitleBar
         storeName={settings.storeName}
         onOpenHelp={() => setShowShortcutsModal(true)}
+        onNewInvoice={handleStartNewInvoice}
       />
 
       {/* 2. Main Desktop Workstation Body */}
       <div className="flex-1 flex overflow-hidden">
         {/* Modern Windows Navigation Dock Sidebar */}
-        <aside className="no-print w-60 bg-slate-950/90 border-l border-slate-800/80 flex flex-col justify-between shrink-0 p-3">
-          <div className="space-y-4">
-            {/* Quick Invoice #26700 Demo Launcher */}
-            <div className="p-2.5 bg-blue-950/40 border border-blue-500/30 rounded-xl space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-blue-300">فاتورة صورة المستخدم</span>
-                <span className="text-[10px] font-mono bg-blue-600 text-white px-1.5 py-0.2 rounded font-bold">#26700</span>
-              </div>
-              <button
-                onClick={() => {
-                  const sample = invoices.find((inv) => inv.invoiceNumber === '26700') || invoices[0];
-                  if (sample) setActiveInvoice(sample);
-                  setActiveTab('print_invoice');
-                }}
-                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>معاينة وطباعة الفاتورة</span>
-              </button>
+        <aside className="no-print w-64 bg-slate-950/95 border-l border-slate-800 flex flex-col justify-between shrink-0 p-3">
+          <div className="space-y-3.5">
+            {/* Top Brand Showcase in Sidebar */}
+            <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl flex items-center justify-between">
+              <Logo size="sm" showSubtitle={true} />
             </div>
+
+            {/* Prominent Action: New Invoice F2 */}
+            <button
+              onClick={handleStartNewInvoice}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>فاتورة جديدة فارغة [F2]</span>
+            </button>
 
             {/* Navigation Groups */}
             <nav className="space-y-1 text-xs">
@@ -304,7 +305,12 @@ export default function App() {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id as ActiveTab)}
+                    onClick={() => {
+                      if (item.id === 'pos') {
+                        setInvoiceToEdit(null);
+                      }
+                      setActiveTab(item.id as ActiveTab);
+                    }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg font-bold transition-all cursor-pointer ${
                       isActive
                         ? 'bg-blue-600 text-white shadow-xs'
@@ -324,7 +330,7 @@ export default function App() {
                 );
               })}
 
-              <div className="text-[10px] font-bold text-slate-500 px-2 pt-3 pb-1">
+              <div className="text-[10px] font-bold text-slate-500 px-2 pt-2.5 pb-1">
                 المخازن والمستودعات
               </div>
               {[
@@ -355,7 +361,7 @@ export default function App() {
                 );
               })}
 
-              <div className="text-[10px] font-bold text-slate-500 px-2 pt-3 pb-1">
+              <div className="text-[10px] font-bold text-slate-500 px-2 pt-2.5 pb-1">
                 المالية والتقارير
               </div>
               {[
@@ -383,6 +389,9 @@ export default function App() {
                 );
               })}
 
+              <div className="text-[10px] font-bold text-slate-500 px-2 pt-2.5 pb-1">
+                النظام
+              </div>
               {[
                 { id: 'settings', label: 'إعدادات المتجر والفاتورة', icon: Settings },
               ].map((item) => {
@@ -432,6 +441,8 @@ export default function App() {
                 nextInvoiceNumber={getNextInvoiceNumber()}
                 onSaveInvoice={handleSaveInvoice}
                 onAddCustomer={(newCust) => handleUpdateCustomers([newCust, ...customers])}
+                invoiceToEdit={invoiceToEdit}
+                resetTrigger={resetTrigger}
               />
             )}
 
@@ -440,7 +451,10 @@ export default function App() {
                 invoice={activeInvoice}
                 settings={settings}
                 onBack={() => setActiveTab('invoices_list')}
-                onEdit={() => setActiveTab('pos')}
+                onEdit={(inv) => {
+                  setInvoiceToEdit(inv);
+                  setActiveTab('pos');
+                }}
                 onUpdateType={(newType) => {
                   const updated = { ...activeInvoice, type: newType };
                   setActiveInvoice(updated);
@@ -542,26 +556,30 @@ export default function App() {
           {/* 3. Windows Desktop Status & Shortcut Bar */}
           <div className="no-print bg-slate-950 text-slate-400 border-t border-slate-800 px-4 py-1.5 flex flex-wrap items-center justify-between text-[11px] font-mono shrink-0 select-none">
             <div className="flex items-center gap-4">
+              <button
+                onClick={handleStartNewInvoice}
+                className="flex items-center gap-1 text-slate-300 font-sans hover:text-white cursor-pointer"
+              >
+                <span className="font-bold text-sky-400">[F2]</span> فاتورة جديدة
+              </button>
               <span className="flex items-center gap-1 text-slate-300 font-sans">
-                <span className="font-bold text-blue-400">[F2]</span> فاتورة جديدة
-              </span>
-              <span className="flex items-center gap-1 text-slate-300 font-sans">
-                <span className="font-bold text-blue-400">[F3]</span> بحث وسكانر
+                <span className="font-bold text-sky-400">[F3]</span> بحث وسكانر
               </span>
               <span className="flex items-center gap-1 text-slate-300 font-sans">
                 <span className="font-bold text-emerald-400">[F9]</span> حفظ وطباعة
               </span>
-              <span className="flex items-center gap-1 text-slate-300 font-sans">
+              <button
+                onClick={() => setActiveTab('cashier_expenses')}
+                className="flex items-center gap-1 text-slate-300 font-sans hover:text-white cursor-pointer"
+              >
                 <span className="font-bold text-amber-400">[F10]</span> الخزينة
-              </span>
+              </button>
             </div>
 
             <div className="flex items-center gap-4">
               <span>المستودع: {settings.defaultWarehouse}</span>
               <span>·</span>
               <span>العملة: {settings.currency}</span>
-              <span>·</span>
-              <span className="text-emerald-400">Windows Ready ✓</span>
             </div>
           </div>
         </div>
@@ -573,12 +591,12 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-700 text-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <Keyboard className="w-5 h-5 text-blue-400" />
-                <h3 className="font-bold text-base">دليل اختصارات لوحة المفاتيح في ويندوز</h3>
+                <Keyboard className="w-5 h-5 text-sky-400" />
+                <h3 className="font-bold text-base">دليل اختصارات لوحة المفاتيح - Top Security</h3>
               </div>
               <button
                 onClick={() => setShowShortcutsModal(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -599,7 +617,7 @@ export default function App() {
                   key={idx}
                   className="flex items-center justify-between p-2 rounded-lg bg-slate-800/60 border border-slate-700/50"
                 >
-                  <span className="font-mono font-bold text-blue-300 bg-slate-950 px-2 py-1 rounded border border-slate-700">
+                  <span className="font-mono font-bold text-sky-300 bg-slate-950 px-2 py-1 rounded border border-slate-700">
                     {item.key}
                   </span>
                   <span className="text-slate-200">{item.label}</span>

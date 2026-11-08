@@ -17,6 +17,13 @@ export default defineConfig(() => {
     },
     build: {
       chunkSizeWarningLimit: 2000,
+      // @ts-ignore rolldownOptions is supported in Vite 8 / Rolldown
+      rolldownOptions: {
+        external: ['react-is'],
+      },
+      rollupOptions: {
+        external: ['react-is'],
+      },
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
