@@ -50,6 +50,7 @@ export const InternetSubscriptionsView: React.FC<InternetSubscriptionsViewProps>
   const [editingSub, setEditingSub] = useState<InternetSubscription | null>(null);
   const [renewingSub, setRenewingSub] = useState<InternetSubscription | null>(null);
   const [receiptSub, setReceiptSub] = useState<{ sub: InternetSubscription; receiptNumber: string; date: string } | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Form state for Add / Edit
   // Exactly ordered: 1. Customer Name, 2. Phone, 3. Address, 4. Amount
@@ -250,9 +251,10 @@ export const InternetSubscriptionsView: React.FC<InternetSubscriptionsViewProps>
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.customerName.trim() || !formData.phone.trim()) {
-      alert('يرجى كتابة اسم العميل ورقم التلفون');
+      setFormError('يرجى كتابة اسم العميل ورقم التلفون');
       return;
     }
+    setFormError(null);
 
     const calculatedStatus: InternetSubscription['status'] =
       getDaysRemaining(formData.expiryDate) < 0
@@ -359,7 +361,13 @@ export const InternetSubscriptionsView: React.FC<InternetSubscriptionsViewProps>
       cleanPhone = '2' + cleanPhone;
     }
 
-    window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+    const waLink = document.createElement('a');
+    waLink.href = `https://wa.me/${cleanPhone}?text=${message}`;
+    waLink.target = '_blank';
+    waLink.rel = 'noopener noreferrer';
+    document.body.appendChild(waLink);
+    waLink.click();
+    document.body.removeChild(waLink);
   };
 
   // Print Receipt directly
@@ -743,6 +751,12 @@ export const InternetSubscriptionsView: React.FC<InternetSubscriptionsViewProps>
             </div>
 
             <form onSubmit={handleSubmitForm} className="space-y-3.5 pt-3 text-xs">
+              {formError && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{formError}</span>
+                </div>
+              )}
               {/* Optional: Pick from existing customers */}
               {!editingSub && customers.length > 0 && (
                 <div className="bg-blue-50/70 p-2.5 rounded-xl border border-blue-100">

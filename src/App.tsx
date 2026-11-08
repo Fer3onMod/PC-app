@@ -688,32 +688,90 @@ export default function App() {
           </div>
 
           {/* 3. Windows Desktop Status & Shortcut Bar */}
-          <div className="no-print bg-slate-950 text-slate-400 border-t border-slate-800 px-4 py-1.5 flex flex-wrap items-center justify-between text-[11px] font-mono shrink-0 select-none">
-            <div className="flex items-center gap-4">
+          <div className="no-print bg-slate-950/95 backdrop-blur-xs text-slate-400 border-t border-slate-800/90 px-3.5 py-1.5 flex flex-wrap items-center justify-between gap-3 text-[11px] shrink-0 select-none shadow-md">
+            {/* Quick Keyboard Actions */}
+            <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
               <button
                 onClick={handleStartNewInvoice}
-                className="flex items-center gap-1 text-slate-300 font-sans hover:text-white cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900/90 hover:bg-slate-800 hover:text-white border border-slate-800 text-slate-300 font-sans transition-all cursor-pointer group shadow-xs active:scale-95"
+                title="فاتورة جديدة فارغة (F2)"
               >
-                <span className="font-bold text-sky-400">[F2]</span> فاتورة جديدة
+                <kbd className="px-1.5 py-0.5 rounded bg-sky-950/80 border border-sky-500/40 text-sky-400 font-mono font-bold text-[10px] group-hover:border-sky-400">
+                  F2
+                </kbd>
+                <span className="font-semibold text-xs">فاتورة جديدة</span>
               </button>
-              <span className="flex items-center gap-1 text-slate-300 font-sans">
-                <span className="font-bold text-sky-400">[F3]</span> بحث وسكانر
+
+              <span className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-900/60 border border-slate-800/60 text-slate-300 font-sans">
+                <kbd className="px-1.5 py-0.5 rounded bg-sky-950/80 border border-sky-500/40 text-sky-400 font-mono font-bold text-[10px]">
+                  F3
+                </kbd>
+                <span>بحث وسكانر</span>
               </span>
-              <span className="flex items-center gap-1 text-slate-300 font-sans">
-                <span className="font-bold text-emerald-400">[F9]</span> حفظ وطباعة
+
+              <span className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-900/60 border border-slate-800/60 text-slate-300 font-sans">
+                <kbd className="px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 font-mono font-bold text-[10px]">
+                  F9
+                </kbd>
+                <span>حفظ وطباعة</span>
               </span>
+
               <button
                 onClick={() => setActiveTab('cashier_expenses')}
-                className="flex items-center gap-1 text-slate-300 font-sans hover:text-white cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900/90 hover:bg-slate-800 hover:text-white border border-slate-800 text-slate-300 font-sans transition-all cursor-pointer group shadow-xs active:scale-95"
+                title="الخزينة والمصروفات (F10)"
               >
-                <span className="font-bold text-amber-400">[F10]</span> الخزينة
+                <kbd className="px-1.5 py-0.5 rounded bg-amber-950/80 border border-amber-500/40 text-amber-400 font-mono font-bold text-[10px] group-hover:border-amber-400">
+                  F10
+                </kbd>
+                <span className="font-semibold text-xs">الخزينة</span>
+              </button>
+
+              <button
+                onClick={() => setShowShortcutsModal(true)}
+                className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-900/60 hover:bg-slate-800 hover:text-slate-200 border border-slate-800/60 text-slate-400 font-sans transition-all cursor-pointer"
+                title="دليل الاختصارات (F1)"
+              >
+                <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px]">
+                  F1
+                </kbd>
+                <span>مساعدة</span>
               </button>
             </div>
 
-            <div className="flex items-center gap-4">
-              <span>المستودع: {settings.defaultWarehouse}</span>
-              <span>·</span>
-              <span>العملة: {settings.currency}</span>
+            {/* Developer Signature & Branding Badge (Akram Reda [ Fer3on_Mod ]) */}
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border border-indigo-500/30 text-indigo-200 shadow-sm hover:border-indigo-400/60 transition-all cursor-default group">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <div className="flex items-center gap-1.5 text-xs font-sans">
+                <span className="text-[11px] text-slate-400 font-medium">برمجة وصنع:</span>
+                <span className="font-bold text-white tracking-wide group-hover:text-sky-300 transition-colors">
+                  Akram Reda
+                </span>
+                <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-mono text-[10px] font-bold border border-indigo-500/40">
+                  [ Fer3on_Mod ]
+                </span>
+              </div>
+            </div>
+
+            {/* Store and System Meta Indicators */}
+            <div className="hidden sm:flex items-center gap-3 text-slate-400 font-mono text-[11px]">
+              <span className="flex items-center gap-1">
+                <span className="text-slate-500 font-sans">المخزن:</span>
+                <span className="text-slate-200 font-semibold">{settings.defaultWarehouse}</span>
+              </span>
+              <span className="text-slate-700">|</span>
+              <span className="flex items-center gap-1">
+                <span className="text-slate-500 font-sans">العملة:</span>
+                <span className="text-slate-200 font-semibold">{settings.currency}</span>
+              </span>
+              <span className="text-slate-700">|</span>
+              <span className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-950/70 border border-emerald-500/30 text-emerald-400 rounded-md text-[10px] font-sans font-bold shadow-2xs">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400 inline" />
+                <span>النظام جاهز ومتصل</span>
+              </span>
             </div>
           </div>
         </div>
