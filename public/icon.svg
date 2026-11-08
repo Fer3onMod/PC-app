@@ -1,0 +1,76 @@
+<svg width="512" height="512" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="50%" stop-color="#1d4ed8" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+
+    <linearGradient id="cyanAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <linearGradient id="innerGlow" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Protective Shield Geometry -->
+  <path
+    d="M50 6 L86 20 C86 52 72 78 50 94 C28 78 14 52 14 20 L50 6 Z"
+    fill="url(#shieldGrad)"
+    stroke="#60a5fa"
+    stroke-width="3.5"
+    stroke-linejoin="round"
+  />
+
+  <!-- Inner Gloss Shield Line -->
+  <path
+    d="M50 12 L80 24 C80 50 68 72 50 86 C32 72 20 50 20 24 L50 12 Z"
+    fill="url(#innerGlow)"
+    opacity="0.35"
+  />
+
+  <!-- Precision Security Camera Iris / Optical Sensor -->
+  <circle
+    cx="50"
+    cy="48"
+    r="20"
+    fill="#0b132b"
+    stroke="url(#cyanAccent)"
+    stroke-width="3"
+  />
+
+  <!-- Aperture Blades / Security Radar Sweep Segments -->
+  <path
+    d="M50 32 L58 45 M66 48 L53 56 M58 64 L45 56 M34 52 L47 43 M42 34 L50 48"
+    stroke="#38bdf8"
+    stroke-width="2.5"
+    stroke-linecap="round"
+  />
+
+  <!-- Center Optical Lens Glint (Biometric Eye) -->
+  <circle
+    cx="50"
+    cy="48"
+    r="8"
+    fill="#38bdf8"
+  />
+  <circle
+    cx="48"
+    cy="46"
+    r="2.5"
+    fill="#ffffff"
+  />
+
+  <!-- Top Security Crest Crown Accent -->
+  <path
+    d="M44 14 L50 9 L56 14"
+    stroke="#38bdf8"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
