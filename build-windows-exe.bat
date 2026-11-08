@@ -9,7 +9,9 @@ echo ========================================================
 echo.
 if not exist node_modules (
     echo [تنبيه] جاري تثبيت الحزم والمكتبات...
+    if exist package-lock.json del /f /q package-lock.json
     call npm install --legacy-peer-deps
+    call npm install --save-optional @rolldown/binding-win32-x64-msvc --legacy-peer-deps
 )
 
 echo 1. جاري فحص الكود وبناء ملفات الواجهة (Vite Build)...
