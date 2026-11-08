@@ -89,7 +89,7 @@ export const WindowsTitleBar: React.FC<WindowsTitleBarProps> = ({
           <button
             onClick={onOpenUpdateModal}
             className="flex items-center gap-1 px-2.5 py-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded text-[11px] font-bold shadow-xs animate-pulse cursor-pointer transition-all"
-            title="يتوفر تحديث جديد للبرنامج من GitHub!"
+            title="يتوفر تحديث جديد للبرنامج متوفر للتحميل الآن"
           >
             <span>🚀 تحديث جديد</span>
           </button>

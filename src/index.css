@@ -13,36 +13,179 @@
 
 /* Custom Print Styles for Invoice and POS Receipts */
 @media print {
-  /* Hide the rest of the application interface */
+  /* Force exact background colors, borders, and graphics on all browsers */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
+    font-family: 'Cairo', system-ui, -apple-system, sans-serif !important;
+  }
+  
+  /* Hide all application interface chrome */
   body * {
     visibility: hidden;
   }
   
   .no-print, .no-print * {
     display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
-  /* Show only the invoice container or subscription receipt */
+  /* Show only printable documents */
   #printable-invoice, #printable-invoice *,
-  #subscription-receipt-print, #subscription-receipt-print * {
+  #subscription-receipt-print, #subscription-receipt-print *,
+  #printable-report, #printable-report * {
     visibility: visible;
   }
   
-  #printable-invoice, #subscription-receipt-print {
+  /* Retain exact borders, padding, and layout */
+  #printable-invoice {
     position: absolute;
     left: 0;
+    right: 0;
     top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    background: #ffffff !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    min-height: unset !important;
+    height: auto !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* A4 Invoice formats: preserve exact page layout matching on-screen design */
+  #printable-invoice.invoice-a4-exact,
+  #printable-invoice.invoice-a4-branded,
+  #printable-invoice:not(.thermal-receipt-print) {
+    width: 100% !important;
+    max-width: 195mm !important;
+    padding: 7mm 8mm !important;
+    border: 1px solid #64748b !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Thermal roll receipt: preserve 80mm roll width and layout */
+  #printable-invoice.thermal-receipt-print {
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 3mm 2mm !important;
+    border: none !important;
+    font-size: 11px !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Subscription receipts */
+  #subscription-receipt-print {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 195mm !important;
+    margin: 0 auto !important;
+    padding: 7mm 8mm !important;
+    background-color: #ffffff !important;
     color: #000000 !important;
     box-shadow: none !important;
-    border: none !important;
+    border: 1px solid #64748b !important;
+    box-sizing: border-box !important;
+    min-height: unset !important;
+  }
+
+  /* Reports */
+  #printable-report {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 195mm !important;
+    margin: 0 auto !important;
+    padding: 7mm 8mm !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    box-sizing: border-box !important;
+    min-height: unset !important;
+  }
+
+  /* Table styling fidelity */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  td, th {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Explicit border color enhancement so print lines don't fade */
+  .border,
+  .border-b,
+  .border-t,
+  .border-l,
+  .border-r {
+    border-color: #64748b !important;
+  }
+
+  .border-slate-200,
+  .border-slate-300,
+  .border-slate-400,
+  .border-slate-500,
+  .border-slate-700 {
+    border-color: #64748b !important;
+  }
+
+  /* Background color fidelity */
+  .bg-slate-100 {
+    background-color: #f1f5f9 !important;
+  }
+
+  .bg-slate-50 {
+    background-color: #f8fafc !important;
+  }
+
+  .bg-blue-900 {
+    background-color: #1e3a8a !important;
+    color: #ffffff !important;
+  }
+
+  .bg-blue-50 {
+    background-color: #eff6ff !important;
+  }
+
+  .bg-slate-900 {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
   }
 
   @page {
-    size: auto;
+    size: A4 portrait;
     margin: 6mm 8mm;
   }
 }

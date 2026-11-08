@@ -21,7 +21,7 @@ import { CashierExpensesView } from './components/CashierExpensesView';
 import { ReportsView } from './components/ReportsView';
 import { SettingsView } from './components/SettingsView';
 import { UpdateNotificationModal } from './components/UpdateNotificationModal';
-import { checkForGitHubUpdate, ReleaseInfo } from './utils/updater';
+import { checkForGitHubUpdate, ReleaseInfo, APP_CURRENT_VERSION, GITHUB_REPO } from './utils/updater';
 
 import {
   ShoppingCart,
@@ -85,9 +85,9 @@ export default function App() {
   useEffect(() => {
     reloadData();
 
-    // Check for GitHub updates on startup
+    // Check for updates on startup
     let isMounted = true;
-    checkForGitHubUpdate().then((res) => {
+    checkForGitHubUpdate(APP_CURRENT_VERSION).then((res) => {
       if (isMounted && res.hasUpdate && res.latestRelease) {
         setAvailableUpdate(res.latestRelease);
         setShowUpdateModal(true);

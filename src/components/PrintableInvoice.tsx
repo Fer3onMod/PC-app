@@ -144,6 +144,27 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({
         </div>
       </div>
 
+      {/* Dynamic @page media rule matching current format */}
+      {printFormat === 'thermal' ? (
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media print {
+            @page {
+              size: 80mm auto !important;
+              margin: 0 !important;
+            }
+          }
+        `}} />
+      ) : (
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media print {
+            @page {
+              size: A4 portrait !important;
+              margin: 6mm 8mm !important;
+            }
+          }
+        `}} />
+      )}
+
       {/* Invoice Document Wrapper */}
       <div className="flex justify-center p-2 sm:p-4">
         {/* ============================================================== */}
@@ -152,7 +173,7 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({
         {printFormat === 'exact' && (
           <div
             id="printable-invoice"
-            className="w-full max-w-[840px] bg-white border border-slate-400 p-6 sm:p-8 text-black text-xs leading-relaxed shadow-sm font-sans"
+            className="invoice-a4-exact w-full max-w-[840px] bg-white border border-slate-400 p-6 sm:p-8 text-black text-xs leading-relaxed shadow-sm font-sans"
             style={{ minHeight: '1050px', boxSizing: 'border-box' }}
           >
             {/* Top Bar: Page & Title & Warehouse */}
@@ -407,7 +428,7 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({
         {printFormat === 'branded' && (
           <div
             id="printable-invoice"
-            className="w-full max-w-[840px] bg-white border border-slate-300 p-8 text-black text-xs shadow-sm font-sans"
+            className="invoice-a4-branded w-full max-w-[840px] bg-white border border-slate-300 p-8 text-black text-xs shadow-sm font-sans"
             style={{ minHeight: '1050px', boxSizing: 'border-box' }}
           >
             {/* Store Full Header with Professional Logo */}
@@ -542,7 +563,7 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({
         {printFormat === 'thermal' && (
           <div
             id="printable-invoice"
-            className="w-[80mm] max-w-[80mm] bg-white border border-slate-300 p-3 text-black text-[11px] leading-tight font-mono mx-auto shadow-sm"
+            className="thermal-receipt-print w-[80mm] max-w-[80mm] bg-white border border-slate-300 p-3 text-black text-[11px] leading-tight font-mono mx-auto shadow-sm"
           >
             <div className="text-center border-b border-dashed border-black pb-2 mb-2">
               <h3 className="font-bold text-sm font-sans">{settings.storeName}</h3>

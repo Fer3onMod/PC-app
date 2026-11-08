@@ -37,10 +37,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Top Security",
-      "artifactName": "TopSecurity-Setup.${ext}"
+      "artifactName": "TopSecurity-Setup-${version}.${ext}"
     },
     "portable": {
-      "artifactName": "TopSecurity-Portable.${ext}"
+      "artifactName": "TopSecurity-Portable-${version}.${ext}"
     }
   },
   "dependencies": {

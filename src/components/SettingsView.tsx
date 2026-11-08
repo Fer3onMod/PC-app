@@ -49,14 +49,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const handleCheckUpdate = async () => {
     setCheckingUpdate(true);
     setUpdateInfo({ checked: false, hasUpdate: false });
-    const res = await checkForGitHubUpdate();
+    const res = await checkForGitHubUpdate(APP_CURRENT_VERSION);
     setCheckingUpdate(false);
     if (res.hasUpdate && res.latestRelease) {
       setUpdateInfo({
         checked: true,
         hasUpdate: true,
         release: res.latestRelease,
-        message: `يتوفر تحديث جديد: ${res.latestRelease.tagName}`,
+        message: `يتوفر تحديث جديد: ${res.latestRelease.tagName || res.latestRelease.version}`,
       });
     } else if (res.error) {
       setUpdateInfo({
@@ -68,7 +68,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       setUpdateInfo({
         checked: true,
         hasUpdate: false,
-        message: 'أنت تستخدم أحدث إصدار من البرنامج بالفعل (v1.0.0)!',
+        message: `أنت تستخدم أحدث إصدار من البرنامج بالفعل (v${APP_CURRENT_VERSION})!`,
       });
     }
   };
@@ -346,22 +346,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
 
-        {/* GitHub Auto-Update Card */}
+        {/* تحديثات النظام - مظهر بسيط ونظيف مع تحميل مباشر داخل التطبيق */}
         <div className="mt-5 pt-4 border-t border-slate-200">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 rounded-xl border border-slate-800">
+          <div className="bg-slate-900 text-white p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-600/30 text-blue-400 flex items-center justify-center border border-blue-500/30">
+              <div className="w-10 h-10 rounded-xl bg-blue-600/30 text-blue-400 flex items-center justify-center border border-blue-500/30 shrink-0">
                 <Rocket className="w-5 h-5 stroke-[2.2]" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-bold text-white">تحديثات البرنامج ومزامنة GitHub</h4>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                    الإصدار الحالي: v{APP_CURRENT_VERSION}
+                  <h4 className="text-sm font-bold text-white">تحديثات النظام</h4>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-bold">
+                    الإصدار المثبت: v{APP_CURRENT_VERSION}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
-                  المستودع: {GITHUB_REPO}
+                <p className="text-xs text-slate-400 mt-0.5">
+                  فحص الإصدارات الجديدة وتحميلها مباشرة بنقرة واحدة داخل البرنامج.
                 </p>
               </div>
             </div>
@@ -370,47 +370,63 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               type="button"
               onClick={handleCheckUpdate}
               disabled={checkingUpdate}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer shrink-0"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${checkingUpdate ? 'animate-spin' : ''}`} />
-              <span>{checkingUpdate ? 'جاري الفحص من GitHub...' : 'التحقق من وجود تحديثات'}</span>
+              <span>{checkingUpdate ? 'جاري التحقق من التحديثات...' : 'التحقق من التحديثات'}</span>
             </button>
           </div>
 
           {updateInfo.checked && (
             <div
-              className={`mt-2.5 p-3 rounded-lg text-xs font-bold border flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+              className={`mt-2.5 p-3.5 rounded-xl text-xs font-bold border transition-all ${
                 updateInfo.hasUpdate
                   ? 'bg-blue-50 text-blue-900 border-blue-300'
-                  : 'bg-slate-100 text-slate-700 border-slate-200'
+                  : 'bg-slate-50 text-slate-700 border-slate-200'
               }`}
             >
-              <div className="flex items-center gap-2">
-                {updateInfo.hasUpdate ? <Rocket className="w-4 h-4 text-blue-600 animate-bounce" /> : <Check className="w-4 h-4 text-emerald-600" />}
-                <span>{updateInfo.message}</span>
-              </div>
-
-              {updateInfo.hasUpdate && updateInfo.release && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  {updateInfo.release.setupUrl && (
+                  {updateInfo.hasUpdate ? (
+                    <Rocket className="w-4 h-4 text-blue-600 animate-bounce shrink-0" />
+                  ) : (
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  )}
+                  <span>{updateInfo.message}</span>
+                </div>
+
+                {updateInfo.hasUpdate && updateInfo.release && (
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       type="button"
-                      onClick={() => openDownloadUrl(updateInfo.release!.setupUrl!)}
-                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                      onClick={() =>
+                        openDownloadUrl(
+                          updateInfo.release!.setupUrl || updateInfo.release!.htmlUrl,
+                          `TopSecurity-Setup-${updateInfo.release!.version}.exe`
+                        )
+                      }
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs"
                     >
-                      تحميل التحديث (Setup.exe)
+                      <Download className="w-3.5 h-3.5" />
+                      <span>تحميل النسخة الرسمية (Setup.exe)</span>
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => openDownloadUrl(updateInfo.release!.htmlUrl)}
-                    className="p-1 text-slate-600 hover:text-slate-900"
-                    title="فتح GitHub"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openDownloadUrl(
+                          updateInfo.release!.portableUrl || updateInfo.release!.htmlUrl,
+                          `TopSecurity-Portable-${updateInfo.release!.version}.exe`
+                        )
+                      }
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>تحميل النسخة المحمولة (Portable.exe)</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
