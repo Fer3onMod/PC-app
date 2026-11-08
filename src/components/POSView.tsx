@@ -405,11 +405,14 @@ export const POSView: React.FC<POSViewProps> = ({
 
     onSaveInvoice(invoice, shouldPrint);
 
-    // If saving without printing, immediately clean cart for next customer
+    // If saving without printing, immediately clean cart and advance to next incremented invoice number
     if (!shouldPrint) {
       setCartItems([]);
       setPaidAmount(0);
-      showToast(`✓ تم حفظ الفاتورة #${invoice.invoiceNumber} بنجاح! جاهز للفاتورة التالية.`);
+      const currentNumeric = parseInt(invoice.invoiceNumber, 10);
+      const nextNum = !isNaN(currentNumeric) ? String(currentNumeric + 1) : nextInvoiceNumber;
+      setCustomInvoiceNum(nextNum);
+      showToast(`✓ تم حفظ الفاتورة #${invoice.invoiceNumber} بنجاح! جاهز للفاتورة رقم #${nextNum}.`);
       searchInputRef.current?.focus();
     }
   };
@@ -515,16 +518,16 @@ export const POSView: React.FC<POSViewProps> = ({
             <span>فاتورة جديدة [F2]</span>
           </button>
 
-          {/* Editable Invoice Number */}
-          <div className="flex items-center gap-1 bg-slate-900 text-white px-2.5 py-1 rounded-lg text-xs font-mono font-bold shadow-xs">
-            <span className="text-slate-400 font-sans font-normal text-[11px]">رقم:</span>
-            <span className="text-sky-400 font-bold">#</span>
+          {/* Editable Invoice Number (Starts from 1 to infinity) */}
+          <div className="flex items-center gap-1.5 bg-slate-900 text-white px-3 py-1 rounded-lg text-xs font-mono font-bold shadow-xs border border-slate-800">
+            <span className="text-slate-400 font-sans font-normal text-[11px]">رقم الفاتورة:</span>
+            <span className="text-sky-400 font-black text-sm">#</span>
             <input
               type="text"
               value={customInvoiceNum}
               onChange={(e) => setCustomInvoiceNum(e.target.value)}
-              className="w-16 bg-transparent text-sky-400 font-mono font-bold text-xs border-0 p-0 focus:outline-hidden focus:ring-1 focus:ring-sky-400 rounded text-center"
-              title="يمكنك تعديل رقم الفاتورة يدوياً إذا رغبت"
+              className="w-14 bg-transparent text-sky-400 font-mono font-black text-sm border-0 p-0 focus:outline-hidden focus:ring-1 focus:ring-sky-400 rounded text-center"
+              title="رقم الفاتورة (يبدأ برقم 1 ويتغير تلقائياً مع كل فاتورة جديدة)"
             />
           </div>
         </div>

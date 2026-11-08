@@ -112,3 +112,20 @@ export interface StoreSettings {
   defaultInvoiceType: InvoiceType;
   defaultPrintFormat: 'a4' | 'a5' | 'thermal';
 }
+
+export interface InternetSubscription {
+  id: string;
+  customerName: string;      // اسم العميل
+  phone: string;             // رقم التلفون
+  address: string;           // العنوان
+  subscriptionAmount: number;// مبلغ الاشتراك
+  planSpeed?: string;        // باقة / سرعة النت
+  startDate: string;         // تاريخ بداية الشهر الحالي (YYYY-MM-DD)
+  expiryDate: string;        // تاريخ انتهاء الشهر / موعد التجديد (YYYY-MM-DD)
+  renewalDay?: number;       // يوم التجديد من كل شهر
+  status: 'active' | 'expiring_soon' | 'expired' | 'suspended';
+  lastRenewedDate?: string;  // تاريخ آخر تجديد
+  ipOrAccount?: string;      // رقم الحساب أو IP العميل
+  notes?: string;            // ملاحظات
+}
+

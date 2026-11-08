@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -100,6 +100,12 @@ ipcMain.on('print-invoice', (event, options) => {
       deviceName: options?.deviceName || '',
       ...options,
     });
+  }
+});
+
+ipcMain.on('open-external-url', (event, url) => {
+  if (url && typeof url === 'string') {
+    shell.openExternal(url);
   }
 });
 

@@ -5,7 +5,8 @@ import {
   Invoice,
   Expense,
   CashShift,
-  StoreSettings
+  StoreSettings,
+  InternetSubscription
 } from './types';
 import { storage } from './utils/storage';
 import { WindowsTitleBar } from './components/WindowsTitleBar';
@@ -15,9 +16,12 @@ import { PrintableInvoice } from './components/PrintableInvoice';
 import { InvoicesListView } from './components/InvoicesListView';
 import { InventoryView } from './components/InventoryView';
 import { CustomersView } from './components/CustomersView';
+import { InternetSubscriptionsView } from './components/InternetSubscriptionsView';
 import { CashierExpensesView } from './components/CashierExpensesView';
 import { ReportsView } from './components/ReportsView';
 import { SettingsView } from './components/SettingsView';
+import { UpdateNotificationModal } from './components/UpdateNotificationModal';
+import { checkForGitHubUpdate, ReleaseInfo } from './utils/updater';
 
 import {
   ShoppingCart,
@@ -33,7 +37,8 @@ import {
   X,
   Keyboard,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Wifi
 } from 'lucide-react';
 
 type ActiveTab =
@@ -42,6 +47,7 @@ type ActiveTab =
   | 'invoices_list'
   | 'inventory'
   | 'customers'
+  | 'subscriptions'
   | 'cashier_expenses'
   | 'reports'
   | 'settings';
@@ -57,6 +63,7 @@ export default function App() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [subscriptions, setSubscriptions] = useState<InternetSubscription[]>([]);
   const [shift, setShift] = useState<CashShift>(storage.getShift());
   const [settings, setSettings] = useState<StoreSettings>(storage.getSettings());
   const [activeInvoice, setActiveInvoice] = useState<Invoice>(storage.getActiveInvoice());
@@ -66,13 +73,29 @@ export default function App() {
     setCustomers(storage.getCustomers());
     setInvoices(storage.getInvoices());
     setExpenses(storage.getExpenses());
+    setSubscriptions(storage.getSubscriptions());
     setShift(storage.getShift());
     setSettings(storage.getSettings());
     setActiveInvoice(storage.getActiveInvoice());
   };
 
+  const [availableUpdate, setAvailableUpdate] = useState<ReleaseInfo | null>(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+
   useEffect(() => {
     reloadData();
+
+    // Check for GitHub updates on startup
+    let isMounted = true;
+    checkForGitHubUpdate().then((res) => {
+      if (isMounted && res.hasUpdate && res.latestRelease) {
+        setAvailableUpdate(res.latestRelease);
+        setShowUpdateModal(true);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Trigger brand new invoice flow
@@ -127,18 +150,69 @@ export default function App() {
     storage.saveShift(updatedShift);
   };
 
+  const handleUpdateSubscriptions = (updatedSubs: InternetSubscription[]) => {
+    setSubscriptions(updatedSubs);
+    storage.saveSubscriptions(updatedSubs);
+  };
+
+  const handleAddSubscription = (newSub: InternetSubscription, addToShift?: boolean) => {
+    const updated = [newSub, ...subscriptions];
+    handleUpdateSubscriptions(updated);
+
+    if (addToShift && newSub.subscriptionAmount > 0) {
+      handleUpdateShift({
+        ...shift,
+        totalCustomerCollections: shift.totalCustomerCollections + newSub.subscriptionAmount,
+        expectedCash: shift.expectedCash + newSub.subscriptionAmount,
+      });
+    }
+  };
+
+  const handleRenewSubscription = (renewedSub: InternetSubscription, addToShift: boolean) => {
+    const updated = subscriptions.map((s) => (s.id === renewedSub.id ? renewedSub : s));
+    handleUpdateSubscriptions(updated);
+
+    if (addToShift && renewedSub.subscriptionAmount > 0) {
+      handleUpdateShift({
+        ...shift,
+        totalCustomerCollections: shift.totalCustomerCollections + renewedSub.subscriptionAmount,
+        expectedCash: shift.expectedCash + renewedSub.subscriptionAmount,
+      });
+    }
+  };
+
+  const handleDeleteSubscription = (id: string) => {
+    const updated = subscriptions.filter((s) => s.id !== id);
+    handleUpdateSubscriptions(updated);
+  };
+
   const handleUpdateSettings = (updatedSettings: StoreSettings) => {
     setSettings(updatedSettings);
     storage.saveSettings(updatedSettings);
   };
 
   const getNextInvoiceNumber = (): string => {
-    if (invoices.length === 0) return '26700';
-    const nums = invoices
+    if (invoices.length === 0) return '1';
+
+    // Prioritize standard sequential invoice numbers (< 20000)
+    const sequentialNums = invoices
+      .map((inv) => parseInt(inv.invoiceNumber, 10))
+      .filter((n) => !isNaN(n) && n < 20000);
+
+    if (sequentialNums.length > 0) {
+      return String(Math.max(...sequentialNums) + 1);
+    }
+
+    const allValidNums = invoices
       .map((inv) => parseInt(inv.invoiceNumber, 10))
       .filter((n) => !isNaN(n));
-    if (nums.length === 0) return '26700';
-    return String(Math.max(...nums) + 1);
+
+    // If no valid numbers or only old default 26700 exists, start clean at 1
+    if (allValidNums.length === 0 || (allValidNums.length === 1 && allValidNums[0] >= 26700)) {
+      return '1';
+    }
+
+    return String(Math.max(...allValidNums) + 1);
   };
 
   const handleSaveInvoice = (invoice: Invoice, shouldPrint: boolean) => {
@@ -255,6 +329,15 @@ export default function App() {
     (p) => p.currentStock <= p.minStock && p.currentStock > 0
   ).length;
 
+  const expiringSubscriptionsCount = subscriptions.filter((sub) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expiry = new Date(sub.expiryDate);
+    expiry.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays <= 5;
+  }).length;
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans select-none" dir="rtl">
       {/* 1. Windows 11 Desktop Title Bar with Top Security Logo */}
@@ -262,6 +345,8 @@ export default function App() {
         storeName={settings.storeName}
         onOpenHelp={() => setShowShortcutsModal(true)}
         onNewInvoice={handleStartNewInvoice}
+        hasUpdate={!!availableUpdate}
+        onOpenUpdateModal={() => setShowUpdateModal(true)}
       />
 
       {/* 2. Main Desktop Workstation Body */}
@@ -355,10 +440,17 @@ export default function App() {
               })}
 
               <div className="text-[10px] font-bold text-slate-500 px-2 pt-2.5 pb-1">
-                المالية والتقارير
+                المالية والخدمات
               </div>
               {[
                 { id: 'customers', label: 'العملاء والديون', icon: Users },
+                {
+                  id: 'subscriptions',
+                  label: 'اشتراكات النت الشهرية',
+                  icon: Wifi,
+                  badge: expiringSubscriptionsCount > 0 ? `${expiringSubscriptionsCount} تذكير` : `${subscriptions.length} مشترك`,
+                  badgeColor: expiringSubscriptionsCount > 0 ? 'bg-amber-500/25 text-amber-300 font-bold border border-amber-500/40 animate-pulse' : 'bg-slate-800 text-slate-400'
+                },
                 { id: 'cashier_expenses', label: 'الخزينة والمصروفات (F10)', icon: Wallet },
                 { id: 'reports', label: 'التقارير اليومية والأرباح', icon: FileBarChart },
               ].map((item) => {
@@ -378,6 +470,11 @@ export default function App() {
                       <Icon className="w-4 h-4 shrink-0" />
                       <span>{item.label}</span>
                     </div>
+                    {item.badge && (
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${item.badgeColor || ''}`}>
+                        {item.badge}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -425,6 +522,27 @@ export default function App() {
 
         {/* Workspace Canvas (Light / High Contrast Content Surface) */}
         <div className="flex-1 bg-slate-100 text-slate-900 flex flex-col overflow-y-auto">
+          {/* Top Global Notification for Expiring Internet Subscriptions */}
+          {expiringSubscriptionsCount > 0 && activeTab !== 'subscriptions' && (
+            <div className="no-print bg-gradient-to-r from-amber-600 via-rose-600 to-amber-700 text-white px-4 py-2.5 flex items-center justify-between shadow-xs text-xs font-bold shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1 rounded bg-white/20">
+                  <Wifi className="w-4 h-4 animate-bounce shrink-0" />
+                </div>
+                <span>
+                  تنبيه تذكير اشتراكات النت: يوجد {expiringSubscriptionsCount} مشترك ينتهي اشتراكهم خلال الأيام القادمة أو انتهى بالفعل!
+                </span>
+              </div>
+              <button
+                onClick={() => setActiveTab('subscriptions')}
+                className="px-3.5 py-1.5 bg-white text-slate-900 hover:bg-amber-50 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 flex items-center gap-1.5"
+              >
+                <span>عرض وتذكير المشتركين الآن</span>
+                <span>←</span>
+              </button>
+            </div>
+          )}
+
           <div className="flex-1 p-3 sm:p-5">
             {activeTab === 'pos' && (
               <POSView
@@ -512,6 +630,21 @@ export default function App() {
                   setActiveInvoice(inv);
                   setActiveTab('print_invoice');
                 }}
+              />
+            )}
+
+            {activeTab === 'subscriptions' && (
+              <InternetSubscriptionsView
+                subscriptions={subscriptions}
+                customers={customers}
+                settings={settings}
+                onAddSubscription={handleAddSubscription}
+                onUpdateSubscription={(sub) =>
+                  handleUpdateSubscriptions(subscriptions.map((s) => (s.id === sub.id ? sub : s)))
+                }
+                onDeleteSubscription={handleDeleteSubscription}
+                onRenewSubscription={handleRenewSubscription}
+                onRequestOpenTab={(tab) => setActiveTab(tab as ActiveTab)}
               />
             )}
 
@@ -631,6 +764,25 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* GitHub Update Notification Modal */}
+      {availableUpdate && showUpdateModal && (
+        <UpdateNotificationModal
+          release={availableUpdate}
+          onClose={() => setShowUpdateModal(false)}
+        />
+      )}
+
+      {/* Floating Update Available Pill Button when modal dismissed */}
+      {availableUpdate && !showUpdateModal && (
+        <button
+          onClick={() => setShowUpdateModal(true)}
+          className="no-print fixed bottom-4 left-4 z-40 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-xl flex items-center gap-2 cursor-pointer animate-bounce border border-blue-400/40"
+        >
+          <span>🚀 تحديث جديد متاح ({availableUpdate.tagName})</span>
+          <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">تثبيت الآن</span>
+        </button>
       )}
     </div>
   );

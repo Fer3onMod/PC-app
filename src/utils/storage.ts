@@ -1,4 +1,4 @@
-import { Product, Customer, Invoice, Expense, CashShift, StoreSettings } from '../types';
+import { Product, Customer, Invoice, Expense, CashShift, StoreSettings, InternetSubscription } from '../types';
 
 export const DEFAULT_SETTINGS: StoreSettings = {
   storeName: 'Top Security',
@@ -72,6 +72,61 @@ export const INITIAL_SHIFT: CashShift = {
   cashierName: 'كاشير المحل'
 };
 
+const formatDateIso = (d: Date) => d.toISOString().split('T')[0];
+const dateShiftDays = (days: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return formatDateIso(d);
+};
+
+export const INITIAL_SUBSCRIPTIONS: InternetSubscription[] = [
+  {
+    id: 'sub-1',
+    customerName: 'أحمد محمود إبراهيم',
+    phone: '01012345678',
+    address: 'شارع الجمهورية - عمارة الأمل الدور 3',
+    subscriptionAmount: 250,
+    planSpeed: '30 ميجا',
+    startDate: dateShiftDays(-28),
+    expiryDate: dateShiftDays(2), // ينتهي خلال يومين
+    renewalDay: 10,
+    status: 'expiring_soon',
+    lastRenewedDate: dateShiftDays(-28),
+    ipOrAccount: 'acc_ahmed10',
+    notes: 'خط راوتر منزلي'
+  },
+  {
+    id: 'sub-2',
+    customerName: 'محمود عبد الرحمن السيد',
+    phone: '01123456789',
+    address: 'حي الجامعة - برج الصفا شقة 12',
+    subscriptionAmount: 350,
+    planSpeed: '70 ميجا',
+    startDate: dateShiftDays(-10),
+    expiryDate: dateShiftDays(20), // نشط
+    renewalDay: 28,
+    status: 'active',
+    lastRenewedDate: dateShiftDays(-10),
+    ipOrAccount: 'acc_mahmoud70',
+    notes: 'اشتراك مكتب'
+  },
+  {
+    id: 'sub-3',
+    customerName: 'شركة النور للمقاولات',
+    phone: '01234567890',
+    address: 'شارع المشاية السفلية أمام البنك',
+    subscriptionAmount: 500,
+    planSpeed: '100 ميجا فائق السرعة',
+    startDate: dateShiftDays(-32),
+    expiryDate: dateShiftDays(-2), // منتهي
+    renewalDay: 6,
+    status: 'expired',
+    lastRenewedDate: dateShiftDays(-32),
+    ipOrAccount: 'acc_alnoor_corp',
+    notes: 'يرجى الاتصال بالمحاسب قبل الفصل'
+  }
+];
+
 const STORAGE_KEYS = {
   PRODUCTS: 'pos_products_clean_v2',
   CUSTOMERS: 'pos_customers_clean_v2',
@@ -80,6 +135,7 @@ const STORAGE_KEYS = {
   CURRENT_SHIFT: 'pos_shift_clean_v2',
   SETTINGS: 'pos_settings_clean_v2',
   ACTIVE_INVOICE: 'pos_active_invoice_clean_v2',
+  SUBSCRIPTIONS: 'pos_internet_subscriptions_v1',
 };
 
 export const storage = {
@@ -200,6 +256,22 @@ export const storage = {
     localStorage.setItem(STORAGE_KEYS.ACTIVE_INVOICE, JSON.stringify(invoice));
   },
 
+  getSubscriptions(): InternetSubscription[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.SUBSCRIPTIONS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.SUBSCRIPTIONS, JSON.stringify(INITIAL_SUBSCRIPTIONS));
+      return INITIAL_SUBSCRIPTIONS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_SUBSCRIPTIONS;
+    }
+  },
+  saveSubscriptions(subscriptions: InternetSubscription[]) {
+    localStorage.setItem(STORAGE_KEYS.SUBSCRIPTIONS, JSON.stringify(subscriptions));
+  },
+
   exportDatabase(): string {
     const backup = {
       version: '1.0',
@@ -208,6 +280,7 @@ export const storage = {
       customers: this.getCustomers(),
       invoices: this.getInvoices(),
       expenses: this.getExpenses(),
+      subscriptions: this.getSubscriptions(),
       shift: this.getShift(),
       settings: this.getSettings(),
     };
@@ -221,6 +294,7 @@ export const storage = {
       if (data.customers) this.saveCustomers(data.customers);
       if (data.invoices) this.saveInvoices(data.invoices);
       if (data.expenses) this.saveExpenses(data.expenses);
+      if (data.subscriptions) this.saveSubscriptions(data.subscriptions);
       if (data.shift) this.saveShift(data.shift);
       if (data.settings) this.saveSettings(data.settings);
       return true;
@@ -256,6 +330,7 @@ export const storage = {
       STORAGE_KEYS.EXPENSES,
       STORAGE_KEYS.CURRENT_SHIFT,
       STORAGE_KEYS.ACTIVE_INVOICE,
+      STORAGE_KEYS.SUBSCRIPTIONS,
     ];
     oldKeys.forEach((k) => localStorage.removeItem(k));
 
@@ -263,6 +338,7 @@ export const storage = {
     this.saveCustomers(INITIAL_CUSTOMERS);
     this.saveInvoices([]);
     this.saveExpenses([]);
+    this.saveSubscriptions(INITIAL_SUBSCRIPTIONS);
     this.saveShift(INITIAL_SHIFT);
     this.saveActiveInvoice(INITIAL_INVOICE);
   },

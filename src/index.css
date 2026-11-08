@@ -22,12 +22,13 @@
     display: none !important;
   }
   
-  /* Show only the invoice container */
-  #printable-invoice, #printable-invoice * {
+  /* Show only the invoice container or subscription receipt */
+  #printable-invoice, #printable-invoice *,
+  #subscription-receipt-print, #subscription-receipt-print * {
     visibility: visible;
   }
   
-  #printable-invoice {
+  #printable-invoice, #subscription-receipt-print {
     position: absolute;
     left: 0;
     top: 0;
