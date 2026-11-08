@@ -23,7 +23,7 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo.
 echo 2. جاري حزم التطبيق لبرنامج تثبيت ونسخة محمولة عبر Electron Builder...
-call npx electron-builder --win --x64
+call npx electron-builder --win --x64 --publish never
 
 if %ERRORLEVEL% EQU 0 (
     echo.
