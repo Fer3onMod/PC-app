@@ -7,6 +7,11 @@ echo ========================================================
 echo        بناء ملف التثبيت لويندوز TopSecurity-Setup.exe
 echo ========================================================
 echo.
+if not exist node_modules (
+    echo [تنبيه] جاري تثبيت الحزم أولاً...
+    call npm install --legacy-peer-deps
+)
+
 echo 1. جاري بناء ملفات الواجهة (Vite Build)...
 call npm run build
 

@@ -12,7 +12,7 @@ echo.
 
 if not exist node_modules (
     echo [تنبيه] جاري تثبيت الحزم لأول مرة، يرجى الانتظار دقيقة...
-    call npm install
+    call npm install --legacy-peer-deps
 )
 
 echo [✓] جاري فتح البرنامج على المتصفح وسطح المكتب...
