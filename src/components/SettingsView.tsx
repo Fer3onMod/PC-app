@@ -26,6 +26,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 }) => {
   const [formData, setFormData] = useState<StoreSettings>(settings);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ text: string; success: boolean } | null>(null);
+  const [showPurgeModal, setShowPurgeModal] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +45,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     a.download = `backup_store_pos_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    setStatusMessage({ text: 'تم تنزيل النسخة الاحتياطية بنجاح!', success: true });
+    setTimeout(() => setStatusMessage(null), 3000);
   };
 
   const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,26 +59,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       if (content) {
         const success = storage.importDatabase(content);
         if (success) {
-          alert('تم استرجاع النسخة الاحتياطية وتحديث بيانات النظام بنجاح!');
+          setStatusMessage({ text: 'تم استرجاع النسخة الاحتياطية وتحديث بيانات النظام بنجاح!', success: true });
           onDataReload();
         } else {
-          alert('فشل استرجاع الملف، تأكد من صحة ملف النسخة الاحتياطية.');
+          setStatusMessage({ text: 'فشل استرجاع الملف، تأكد من صحة ملف النسخة الاحتياطية.', success: false });
         }
+        setTimeout(() => setStatusMessage(null), 4000);
       }
     };
     reader.readAsText(file);
   };
 
-  const handleResetDemo = () => {
-    if (
-      window.confirm(
-        'هل تريد بالتأكيد إعادة ضبط النظام على البيانات الافتراضية التجريبية (بما فيها فاتورة رقم 26700)؟'
-      )
-    ) {
-      storage.resetToDemo();
-      onDataReload();
-      alert('تمت إعادة ضبط البيانات بنجاح!');
-    }
+  const handleConfirmPurge = () => {
+    storage.purgeAllMockData();
+    onDataReload();
+    setShowPurgeModal(false);
+    setStatusMessage({ text: 'تم تنظيف وتصفير كافة البيانات الوهمية بنجاح!', success: true });
+    setTimeout(() => setStatusMessage(null), 4000);
   };
 
   return (
@@ -292,15 +293,59 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           <button
             type="button"
-            onClick={handleResetDemo}
-            className="flex items-center gap-1.5 px-3 py-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors mr-auto"
-            title="إعادة ضبط البيانات التجريبية"
+            onClick={() => setShowPurgeModal(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-amber-700 hover:text-red-700 bg-amber-50 hover:bg-red-50 border border-amber-200 hover:border-red-200 rounded-lg transition-colors mr-auto font-bold cursor-pointer"
+            title="تصفير وتنظيف شامل للبيانات الوهمية"
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>إعادة تعيين البيانات الافتراضية للبرنامج</span>
+            <RotateCcw className="w-4 h-4 text-amber-600" />
+            <span>تنظيف وتصفير البيانات الوهمية والتجريبية</span>
           </button>
         </div>
+
+        {statusMessage && (
+          <div
+            className={`p-3 rounded-lg text-xs font-bold border flex items-center gap-2 ${
+              statusMessage.success
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                : 'bg-red-50 text-red-800 border-red-300'
+            }`}
+          >
+            <Check className="w-4 h-4" />
+            <span>{statusMessage.text}</span>
+          </div>
+        )}
       </div>
+
+      {/* Confirmation Modal for Purge */}
+      {showPurgeModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 border border-amber-200 text-right">
+            <h3 className="text-base font-bold text-slate-900 border-b pb-2">
+              تأكيد تنظيف وتصفير البيانات الوهمية
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              سيتم حذف جميع الفواتير والمصروفات والأصناف التجريبية والديون الوهمية، والإبقاء على حساب
+              نقدي صالة فقط حتى تبدأ بإدخال بيانات حقيقية لمتجرك.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t">
+              <button
+                type="button"
+                onClick={() => setShowPurgeModal(false)}
+                className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmPurge}
+                className="px-4 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-xs cursor-pointer"
+              >
+                تأكيد التنظيف والتصفير
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

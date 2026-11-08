@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 let mainWindow;
 
@@ -13,7 +14,6 @@ function createWindow() {
     backgroundColor: '#0f172a',
     frame: true,
     autoHideMenuBar: true,
-    icon: path.join(__dirname, '../public/favicon.ico'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -22,13 +22,48 @@ function createWindow() {
     },
   });
 
-  // In production, load the built index.html from dist
-  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
-  if (isDev && process.env.VITE_DEV_SERVER_URL) {
+  // Determine path to built index.html
+  // Handles running unpackaged, packaged in asar, or with custom dev URL
+  const isDev = process.env.NODE_ENV === 'development' && process.env.VITE_DEV_SERVER_URL;
+  if (isDev) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    // Check multiple potential locations for dist/index.html
+    const candidates = [
+      path.join(__dirname, '../dist/index.html'),
+      path.join(app.getAppPath(), 'dist/index.html'),
+      path.join(process.resourcesPath || '', 'app.asar/dist/index.html'),
+      path.join(process.resourcesPath || '', 'app/dist/index.html'),
+    ];
+
+    let targetFile = candidates.find((p) => {
+      try {
+        return fs.existsSync(p);
+      } catch {
+        return false;
+      }
+    }) || candidates[0];
+
+    mainWindow.loadFile(targetFile);
   }
+
+  // Fallback handler if load fails
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    console.error('Failed to load URL:', errorCode, errorDescription, validatedURL);
+    try {
+      mainWindow.loadFile(path.join(app.getAppPath(), 'dist/index.html'));
+    } catch (e) {
+      console.error('Fallback load error:', e);
+    }
+  });
+
+  // Enable F12 toggle for debugging if needed
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12' || (input.control && input.shift && input.key.toLowerCase() === 'i')) {
+      mainWindow.webContents.toggleDevTools();
+      event.preventDefault();
+    }
+  });
 
   // Maximize by default for full workstation POS feel
   mainWindow.maximize();

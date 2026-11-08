@@ -20,10 +20,11 @@ export const WindowsTitleBar: React.FC<WindowsTitleBarProps> = ({
     const updateTime = () => {
       const now = new Date();
       setTimeStr(
-        now.toLocaleTimeString('ar-EG', {
+        now.toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
+          hour12: true,
         })
       );
     };
@@ -57,9 +58,7 @@ export const WindowsTitleBar: React.FC<WindowsTitleBarProps> = ({
     if ((window as any).electronAPI?.close) {
       (window as any).electronAPI.close();
     } else {
-      if (window.confirm('هل تريد إغلاق تطبيق Top Security؟')) {
-        window.close();
-      }
+      window.close();
     }
   };
 
@@ -74,10 +73,10 @@ export const WindowsTitleBar: React.FC<WindowsTitleBarProps> = ({
         </span>
       </div>
 
-      {/* Center: Clean Clock */}
-      <div className="hidden sm:flex items-center gap-1.5 text-slate-400 font-mono text-[11px] bg-slate-900/80 px-2.5 py-0.5 rounded border border-slate-800">
+      {/* Center: Clean Clock (English / LTR) */}
+      <div className="hidden sm:flex items-center gap-1.5 text-slate-300 font-mono text-[11px] bg-slate-900/90 px-2.5 py-0.5 rounded border border-slate-800" dir="ltr">
         <Clock className="w-3.5 h-3.5 text-sky-400" />
-        <span>{timeStr}</span>
+        <span className="tracking-wide font-medium">{timeStr}</span>
       </div>
 
       {/* Left side (RTL): Window Controls (Help, Minimize, Maximize, Close) */}

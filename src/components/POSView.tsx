@@ -12,7 +12,8 @@ import {
   Barcode,
   CheckCircle2,
   X,
-  Edit3
+  Edit3,
+  Users
 } from 'lucide-react';
 
 interface POSViewProps {
@@ -42,7 +43,7 @@ export const POSView: React.FC<POSViewProps> = ({
       customers.find((c) => c.category === 'نقدي' || c.name.includes('نقدي')) ||
       customers[0] || {
         id: 'cust-walk-in',
-        code: '01/3/001',
+        code: '1',
         name: 'عميل نقدي صالة',
         phone1: '',
         phone2: '',
@@ -76,11 +77,12 @@ export const POSView: React.FC<POSViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [showClearCartModal, setShowClearCartModal] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
   const [newCustForm, setNewCustForm] = useState({
     name: '',
-    code: `01/3/${Math.floor(800 + Math.random() * 199)}`,
+    code: String(customers.length + 1),
     phone1: '',
     phone2: '',
     city: 'المنصورة',
@@ -475,19 +477,6 @@ export const POSView: React.FC<POSViewProps> = ({
 
           <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
 
-          {/* Invoice Date */}
-          <div className="flex items-center gap-1.5 text-xs">
-            <span className="font-bold text-slate-500">التاريخ:</span>
-            <input
-              type="text"
-              value={invoiceDate}
-              onChange={(e) => setInvoiceDate(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-md px-2 py-1 text-xs font-mono font-medium w-24 text-slate-800 text-center"
-            />
-          </div>
-
-          <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
-
           {/* Warehouse */}
           <div className="flex items-center gap-1.5 text-xs">
             <span className="font-bold text-slate-500">المستودع:</span>
@@ -555,13 +544,24 @@ export const POSView: React.FC<POSViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsManualCustomer(!isManualCustomer)}
-                  className={`text-[11px] px-2 py-0.5 rounded-md font-medium border transition-colors cursor-pointer ${
+                  className={`text-xs px-2.5 py-1 rounded-lg font-bold border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95 ${
                     isManualCustomer
-                      ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold'
-                      : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+                      ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                      : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
                   }`}
+                  title={isManualCustomer ? 'العودة لاختيار عميل من القائمة' : 'كتابة اسم عميل مباشر'}
                 >
-                  {isManualCustomer ? '✓ كتابة اسم عميل مباشر' : '✎ كتابة اسم يدوي'}
+                  {isManualCustomer ? (
+                    <>
+                      <Users className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>اختيار من القائمة</span>
+                    </>
+                  ) : (
+                    <>
+                      <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>كتابة اسم يدوي</span>
+                    </>
+                  )}
                 </button>
               </div>
 
@@ -616,7 +616,7 @@ export const POSView: React.FC<POSViewProps> = ({
                   >
                     {customers.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.code} · {c.name} ({c.city})
+                        {c.name}
                       </option>
                     ))}
                   </select>
@@ -668,15 +668,12 @@ export const POSView: React.FC<POSViewProps> = ({
                 {cartItems.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => {
-                      if (window.confirm('هل تريد مسح جميع الأصناف في السلة الحالية؟')) {
-                        setCartItems([]);
-                      }
-                    }}
-                    className="text-xs text-red-600 hover:text-red-700 p-1.5 hover:bg-red-50 rounded cursor-pointer"
+                    onClick={() => setShowClearCartModal(true)}
+                    className="text-xs text-red-600 hover:text-red-700 px-2 py-1.5 hover:bg-red-50 rounded-lg flex items-center gap-1 cursor-pointer font-bold border border-red-200"
                     title="تفريغ السلة بالكامل"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
+                    <span>مسح السلة</span>
                   </button>
                 )}
               </div>
@@ -1180,6 +1177,44 @@ export const POSView: React.FC<POSViewProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: CLEAR CART CONFIRMATION */}
+      {showClearCartModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-red-200 text-right">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                <Trash2 className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-900">تفريغ سلة الفاتورة</h3>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              هل تريد مسح جميع الأصناف ({cartItems.length} سطر) الموجودة في الفاتورة الحالية والبدء بسلة فارغة؟
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowClearCartModal(false)}
+                className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCartItems([]);
+                  setShowClearCartModal(false);
+                }}
+                className="px-3.5 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-xs cursor-pointer"
+              >
+                نعم، مسح السلة
+              </button>
+            </div>
           </div>
         </div>
       )}

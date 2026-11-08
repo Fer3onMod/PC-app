@@ -214,13 +214,6 @@ export default function App() {
   };
 
   const handleReturnInvoice = (originalInvoice: Invoice) => {
-    if (
-      !window.confirm(
-        `هل تريد إصدار مرتجع مبيعات للفاتورة رقم #${originalInvoice.invoiceNumber}؟`
-      )
-    ) {
-      return;
-    }
 
     const returnInvoice: Invoice = {
       ...originalInvoice,
@@ -491,6 +484,14 @@ export default function App() {
                 onDeleteProduct={(id) =>
                   handleUpdateProducts(products.filter((p) => p.id !== id))
                 }
+                onDeleteMultipleProducts={(ids) =>
+                  handleUpdateProducts(products.filter((p) => !ids.includes(p.id)))
+                }
+                onDeleteAllProducts={() => handleUpdateProducts([])}
+                onPurgeMockData={() => {
+                  storage.purgeAllMockData();
+                  reloadData();
+                }}
               />
             )}
 

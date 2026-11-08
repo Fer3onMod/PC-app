@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig(() => {
   return {
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
@@ -17,15 +18,11 @@ export default defineConfig(() => {
     },
     build: {
       chunkSizeWarningLimit: 2000,
-      // @ts-ignore rolldownOptions is supported in Vite 8 / Rolldown
-      rolldownOptions: {
-        external: ['react-is'],
-      },
-      rollupOptions: {
-        external: ['react-is'],
-      },
     },
     server: {
+      host: '0.0.0.0',
+      port: 3000,
+      allowedHosts: true as const,
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',

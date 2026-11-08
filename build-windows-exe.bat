@@ -1,39 +1,40 @@
 @echo off
 chcp 65001 > nul
-title بناء ملف التثبيت لويندوز (.exe) - Top Security
+title بناء ملفات ويندوز (.exe) - Top Security
 color 0a
 
 echo ========================================================
-echo        بناء ملف التثبيت لويندوز TopSecurity-Setup.exe
+echo        بناء ملفات ويندوز Top Security (.exe)
 echo ========================================================
 echo.
 if not exist node_modules (
-    echo [تنبيه] جاري تثبيت الحزم أولاً...
+    echo [تنبيه] جاري تثبيت الحزم والمكتبات...
     call npm install --legacy-peer-deps
 )
 
-echo 1. جاري بناء ملفات الواجهة (Vite Build)...
+echo 1. جاري فحص الكود وبناء ملفات الواجهة (Vite Build)...
 call npm run build
 
 if %ERRORLEVEL% NEQ 0 (
-    echo [خطأ] فشل بناء ملفات المشروع.
+    echo [خطأ] فشل بناء ملفات المشروع. يرجى مراجعة رسائل الخطأ أعلاه.
     pause
     exit /b %ERRORLEVEL%
 )
 
 echo.
-echo 2. جاري حزم التطبيق بصيغة .exe لويندوز عبر Electron Builder...
+echo 2. جاري حزم التطبيق لبرنامج تثبيت ونسخة محمولة عبر Electron Builder...
 call npx electron-builder --win --x64
 
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ========================================================
-    echo  [✓] تم بناء ملف التثبيت بنجاح في مجلد: dist-electron
-    echo  ستجد ملف: TopSecurity-Setup.exe جاهز للتثبيت على أي جهاز ويندوز!
+    echo  [✓] تم بناء الملفات بنجاح في مجلد: dist-electron
+    echo  1. ملف التثبيت: TopSecurity-Setup.exe
+    echo  2. النسخة المحمولة: TopSecurity-Portable.exe
     echo ========================================================
-    explorer dist-electron
+    if exist dist-electron explorer dist-electron
 ) else (
-    echo [خطأ] حدث خطأ أثناء تحزيم ملف .exe
+    echo [خطأ] حدث خطأ أثناء تحزيم ملفات .exe
 )
 
 pause
